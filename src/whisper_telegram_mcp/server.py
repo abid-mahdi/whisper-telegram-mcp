@@ -4,9 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-import subprocess
 import sys
-import tempfile
 from typing import Any, Optional
 
 # CRITICAL: All logging to stderr — stdout is reserved for MCP protocol (stdio transport)
@@ -183,77 +181,45 @@ async def check_backends() -> dict[str, Any]:
 @mcp.tool()
 async def speak_text(
     text: str,
-    voice: str = "Samantha",
+    voice: str = "af_sky",
     output_path: Optional[str] = None,
 ) -> dict[str, Any]:
     """Convert text to speech and return an OGG/Opus audio file path.
 
-    Output is OGG/Opus format — plays as a voice note in Telegram when sent via the files parameter.
-    Uses macOS `say` for TTS + PyAV (bundled FFmpeg) for OGG encoding. No API key required. Completely free.
+    Plays as a native voice note in Telegram when sent as an attachment.
+
+    TTS backends (in priority order):
+    1. Kokoro (local, free, natural-sounding) -- auto-starts via `uvx kokoro-fastapi`
+    2. OpenAI TTS (cloud, requires OPENAI_API_KEY, ~$0.015/1k chars)
+    3. macOS say (Mac only fallback, sounds robotic)
+
+    Configure via TTS_BACKEND env var: "auto" | "kokoro" | "openai" | "macos"
 
     Args:
-        text: The text to convert to speech.
-        voice: macOS voice name (default: "Samantha"). Run `say -v ?` to list all voices.
-        output_path: Optional absolute path for the output .ogg file. Defaults to a temp file.
+        text: Text to synthesise.
+        voice: Voice name. Kokoro voices: af_sky, af_bella, af_sarah, am_adam, am_michael,
+               bf_emma, bm_george, bm_lewis. OpenAI voices: alloy, echo, fable, onyx, nova, shimmer.
+               Configure default via TTS_VOICE env var.
+        output_path: Optional absolute path for the output .ogg file.
 
     Returns:
-        dict with: file_path (absolute path to .ogg), size_bytes, voice, success, error
+        dict with: file_path (absolute .ogg path), backend, voice, success, error
     """
     if not text.strip():
-        return {"success": False, "error": "text is empty", "file_path": None}
+        return {"success": False, "error": "text is empty", "file_path": None, "backend": "none", "voice": ""}
 
-    aiff_path: Optional[str] = None
     try:
-        import av as _av
-
-        aiff_fd, aiff_path = tempfile.mkstemp(suffix=".aiff")
-        os.close(aiff_fd)
-
-        if output_path is None:
-            ogg_fd, ogg_path = tempfile.mkstemp(suffix=".ogg")
-            os.close(ogg_fd)
-        else:
-            ogg_path = output_path
-
-        def _generate() -> None:
-            # Step 1: macOS TTS → AIFF
-            subprocess.run(
-                ["say", "-v", voice, "-o", aiff_path, text],
-                check=True, capture_output=True,
-            )
-            # Step 2: AIFF → OGG/Opus via PyAV (bundled FFmpeg — no system ffmpeg needed)
-            with _av.open(aiff_path) as inp:
-                with _av.open(ogg_path, "w", format="ogg") as out:
-                    out_stream = out.add_stream("libopus", rate=48000)
-                    out_stream.layout = "mono"
-                    for frame in inp.decode(audio=0):
-                        frame.pts = None
-                        for pkt in out_stream.encode(frame):
-                            out.mux(pkt)
-                    for pkt in out_stream.encode(None):
-                        out.mux(pkt)
-
-        await asyncio.to_thread(_generate)
-
-        return {
-            "success": True,
-            "file_path": ogg_path,
-            "size_bytes": os.path.getsize(ogg_path),
-            "voice": voice,
-            "error": None,
-        }
-    except subprocess.CalledProcessError as exc:
-        logger.exception("TTS generation failed")
-        return {"success": False, "error": f"say failed: {exc.stderr.decode() if exc.stderr else str(exc)}", "file_path": None}
+        from whisper_telegram_mcp.tts import auto_tts
+        cfg = Config()
+        if voice != "af_sky":
+            cfg.tts_voice = voice
+        result = await auto_tts(text, cfg, output_path=output_path)
+        d = result.to_dict()
+        d["size_bytes"] = os.path.getsize(result.file_path) if result.file_path and os.path.exists(result.file_path) else 0
+        return d
     except Exception as exc:
         logger.exception("speak_text failed")
-        return {"success": False, "error": str(exc), "file_path": None}
-    finally:
-        if aiff_path:
-            try:
-                os.unlink(aiff_path)
-            except OSError:
-                pass
+        return {"success": False, "error": str(exc), "file_path": None, "backend": "none", "voice": ""}
 
 
 def main() -> None:

@@ -105,33 +105,59 @@ word_timestamps: bool # Include word-level timestamps (default: false)
 
 ### `speak_text`
 
-Converts text to an OGG/Opus audio file using macOS built-in TTS. No API key required — completely free. Uses PyAV (bundled with faster-whisper) for encoding, so no system-level ffmpeg needed.
+Converts text to an OGG/Opus audio file. Automatically selects the best available TTS backend.
 
 ```
 text: str             # Text to synthesise
-voice: str            # macOS voice name (default: "Samantha")
+voice: str            # Voice name (default: "af_sky")
 output_path: str|None # Optional path for output .ogg file
 ```
 
-**Available English voices:**
+**TTS Backends (in priority order):**
+
+| Backend | Cost | Quality | Setup |
+|---------|------|---------|-------|
+| **Kokoro** (local) | Free | Natural, high quality | `uvx kokoro-fastapi` (auto-started) |
+| **OpenAI TTS** (cloud) | ~$0.015/1k chars | High quality | `OPENAI_API_KEY` env var |
+| **macOS say** (fallback) | Free | Robotic | Mac only, no setup |
+
+In `auto` mode (default), the server tries Kokoro first, then OpenAI, then macOS `say`. Configure with `TTS_BACKEND` env var.
+
+**Kokoro voices (primary):**
 
 | Voice | Accent | Style |
 |-------|--------|-------|
-| `Samantha` | US | Natural female (default) |
-| `Flo (English (US))` | US | Natural female |
-| `Daniel` | British | Natural male |
-| `Karen` | Australian | Natural female |
-| `Moira` | Irish | Natural female |
-| `Fred` | US | Classic male |
+| `af_sky` | US | Female (default) |
+| `af_bella` | US | Female |
+| `af_sarah` | US | Female |
+| `af_nicole` | US | Female |
+| `am_adam` | US | Male |
+| `am_michael` | US | Male |
+| `bf_emma` | UK | Female |
+| `bf_isabella` | UK | Female |
+| `bm_george` | UK | Male |
+| `bm_lewis` | UK | Male |
 
-Run `say -v "?"` in your terminal to see all voices available on your system.
+**OpenAI voices (fallback):**
+
+| Voice | Style |
+|-------|-------|
+| `alloy` | Neutral |
+| `echo` | Male |
+| `fable` | Narrative |
+| `onyx` | Deep male |
+| `nova` | Female |
+| `shimmer` | Soft female |
+
+Kokoro voice names are automatically mapped to the closest OpenAI or macOS equivalent when falling back.
 
 **Returns:**
 ```json
 {
   "file_path": "/tmp/tmpXXX.ogg",
   "size_bytes": 16555,
-  "voice": "Samantha",
+  "backend": "kokoro",
+  "voice": "af_sky",
   "success": true,
   "error": null
 }
@@ -166,9 +192,12 @@ All configuration is via environment variables:
 |----------|---------|-------------|
 | `WHISPER_BACKEND` | `auto` | `auto`, `local`, or `openai` |
 | `WHISPER_MODEL` | `base` | Whisper model size (see below) |
-| `OPENAI_API_KEY` | -- | Required for `openai` backend |
+| `OPENAI_API_KEY` | -- | Required for `openai` transcription and TTS backends |
 | `TELEGRAM_BOT_TOKEN` | -- | Required for `transcribe_telegram_voice` |
 | `WHISPER_LANGUAGE` | auto-detect | ISO-639-1 language code |
+| `TTS_BACKEND` | `auto` | `auto`, `kokoro`, `openai`, or `macos` |
+| `TTS_VOICE` | `af_sky` | Default voice for `speak_text` (Kokoro voice name) |
+| `KOKORO_BASE_URL` | `http://127.0.0.1:8880/v1` | Kokoro FastAPI base URL |
 
 ## How It Works
 
@@ -182,20 +211,21 @@ All configuration is via environment variables:
                    /          |          \
       transcribe_audio  transcribe_     speak_text
                         telegram_voice      |
-              |               |        [macOS say]
-              |         [Bot API DL]        |
-              +--------+------+        [PyAV encode]
-                       |                    |
-                 auto_transcribe()        .ogg file
-                  /           \
+              |               |          auto_tts()
+              |         [Bot API DL]    /    |    \
+              +--------+------+     Kokoro OpenAI macOS
+                       |            (local) (cloud) (say)
+                 auto_transcribe()      |
+                  /           \      .ogg file
            LocalBackend    OpenAIBackend
            (faster-whisper)  (Whisper API)
 ```
 
 1. Claude sends a tool call via MCP (stdio transport)
 2. For Telegram voice messages, the file is downloaded via Bot API
-3. `auto_transcribe()` picks the best available backend
-4. Transcription result is returned as structured JSON
+3. `auto_transcribe()` picks the best available transcription backend
+4. `auto_tts()` picks the best available TTS backend (Kokoro -> OpenAI -> macOS)
+5. Results are returned as structured JSON
 
 ## Local vs OpenAI
 
