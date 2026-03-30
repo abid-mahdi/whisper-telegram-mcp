@@ -186,65 +186,74 @@ async def speak_text(
     voice: str = "Samantha",
     output_path: Optional[str] = None,
 ) -> dict[str, Any]:
-    """Convert text to speech using macOS built-in TTS and return an audio file path.
+    """Convert text to speech and return an OGG/Opus audio file path.
 
-    The returned file path can be sent as a voice reply via Telegram or played locally.
-    Uses macOS `say` + `afconvert` — no API key required.
+    Output is OGG/Opus format — plays as a voice note in Telegram when sent via the files parameter.
+    Uses macOS `say` for TTS + PyAV (bundled FFmpeg) for OGG encoding. No API key required. Completely free.
 
     Args:
         text: The text to convert to speech.
         voice: macOS voice name (default: "Samantha"). Run `say -v ?` to list all voices.
-        output_path: Optional absolute path for the output .m4a file.
-                     Defaults to a temp file.
+        output_path: Optional absolute path for the output .ogg file. Defaults to a temp file.
 
     Returns:
-        dict with: file_path (absolute path to .m4a audio file), duration_hint, success, error
+        dict with: file_path (absolute path to .ogg), size_bytes, voice, success, error
     """
     if not text.strip():
         return {"success": False, "error": "text is empty", "file_path": None}
 
+    aiff_path: Optional[str] = None
     try:
-        # Generate AIFF via macOS say
+        import av as _av
+
         aiff_fd, aiff_path = tempfile.mkstemp(suffix=".aiff")
         os.close(aiff_fd)
 
         if output_path is None:
-            m4a_fd, m4a_path = tempfile.mkstemp(suffix=".m4a")
-            os.close(m4a_fd)
+            ogg_fd, ogg_path = tempfile.mkstemp(suffix=".ogg")
+            os.close(ogg_fd)
         else:
-            m4a_path = output_path
+            ogg_path = output_path
 
         def _generate() -> None:
+            # Step 1: macOS TTS → AIFF
             subprocess.run(
                 ["say", "-v", voice, "-o", aiff_path, text],
                 check=True, capture_output=True,
             )
-            subprocess.run(
-                ["afconvert", aiff_path, m4a_path, "-f", "m4af", "-d", "aac"],
-                check=True, capture_output=True,
-            )
+            # Step 2: AIFF → OGG/Opus via PyAV (bundled FFmpeg — no system ffmpeg needed)
+            with _av.open(aiff_path) as inp:
+                with _av.open(ogg_path, "w", format="ogg") as out:
+                    out_stream = out.add_stream("libopus", rate=48000)
+                    out_stream.layout = "mono"
+                    for frame in inp.decode(audio=0):
+                        frame.pts = None
+                        for pkt in out_stream.encode(frame):
+                            out.mux(pkt)
+                    for pkt in out_stream.encode(None):
+                        out.mux(pkt)
 
         await asyncio.to_thread(_generate)
 
-        size = os.path.getsize(m4a_path)
         return {
             "success": True,
-            "file_path": m4a_path,
-            "size_bytes": size,
+            "file_path": ogg_path,
+            "size_bytes": os.path.getsize(ogg_path),
             "voice": voice,
             "error": None,
         }
     except subprocess.CalledProcessError as exc:
         logger.exception("TTS generation failed")
-        return {"success": False, "error": f"TTS failed: {exc.stderr.decode() if exc.stderr else str(exc)}", "file_path": None}
+        return {"success": False, "error": f"say failed: {exc.stderr.decode() if exc.stderr else str(exc)}", "file_path": None}
     except Exception as exc:
         logger.exception("speak_text failed")
         return {"success": False, "error": str(exc), "file_path": None}
     finally:
-        try:
-            os.unlink(aiff_path)
-        except OSError:
-            pass
+        if aiff_path:
+            try:
+                os.unlink(aiff_path)
+            except OSError:
+                pass
 
 
 def main() -> None:
