@@ -117,11 +117,28 @@ output_path: str|None # Optional path for output .ogg file
 
 | Backend | Cost | Quality | Setup |
 |---------|------|---------|-------|
-| **Kokoro** (local) | Free | Natural, high quality | `uvx kokoro-fastapi` (auto-started) |
+| **Kokoro** (local) | Free | Natural, high quality | Start manually (see below) |
 | **OpenAI TTS** (cloud) | ~$0.015/1k chars | High quality | `OPENAI_API_KEY` env var |
 | **macOS say** (fallback) | Free | Robotic | Mac only, no setup |
 
 In `auto` mode (default), the server tries Kokoro first, then OpenAI, then macOS `say`. Configure with `TTS_BACKEND` env var.
+
+**Starting Kokoro locally:**
+
+Kokoro FastAPI is not on PyPI — start it before running the MCP server:
+
+```bash
+# Docker (simplest, recommended)
+docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:latest
+
+# Apple Silicon (GPU-accelerated)
+docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-gpu-mac:latest
+
+# From source
+git clone https://github.com/remsky/Kokoro-FastAPI && cd Kokoro-FastAPI && ./start-cpu.sh
+```
+
+Once running, the MCP server auto-detects it at `http://127.0.0.1:8880/v1`. Override with `KOKORO_BASE_URL` env var.
 
 **Kokoro voices (primary):**
 

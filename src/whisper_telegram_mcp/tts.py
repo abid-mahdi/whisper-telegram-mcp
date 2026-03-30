@@ -119,23 +119,19 @@ async def _is_kokoro_running(base_url: str) -> bool:
 
 
 async def _start_kokoro(base_url: str) -> bool:
-    """Attempt to auto-start Kokoro FastAPI via uvx. Returns True if started successfully."""
-    try:
-        proc = await asyncio.create_subprocess_exec(
-            "uvx", "kokoro-fastapi",
-            stdout=asyncio.subprocess.DEVNULL,
-            stderr=asyncio.subprocess.DEVNULL,
-        )
-        for _ in range(15):
-            await asyncio.sleep(1)
-            if await _is_kokoro_running(base_url):
-                logger.info("Kokoro FastAPI started successfully")
-                return True
-        logger.warning("Kokoro FastAPI did not start in time")
-        return False
-    except Exception as exc:
-        logger.warning("Could not start Kokoro: %s", exc)
-        return False
+    """Kokoro FastAPI must be started manually — it is not on PyPI.
+
+    To run Kokoro locally:
+      Docker (simplest):  docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:latest
+      From source:        git clone https://github.com/remsky/Kokoro-FastAPI && cd Kokoro-FastAPI && ./start-cpu.sh
+
+    This function always returns False so auto_tts falls through to the next backend.
+    """
+    logger.info(
+        "Kokoro not running. Start it with: "
+        "docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:latest"
+    )
+    return False
 
 
 async def auto_tts(
@@ -174,7 +170,11 @@ async def auto_tts(
                 if backend == "kokoro":
                     return TTSResult.failure("kokoro", str(exc))
         elif backend == "kokoro":
-            return TTSResult.failure("kokoro", "Kokoro not running. Start with: uvx kokoro-fastapi")
+            return TTSResult.failure(
+                "kokoro",
+                "Kokoro not running. Start with: "
+                "docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:latest"
+            )
 
     if backend in ("auto", "openai"):
         if config.openai_api_key:
@@ -201,7 +201,9 @@ async def auto_tts(
 
     return TTSResult.failure(
         "auto",
-        "No TTS backend available. Install Kokoro (uvx kokoro-fastapi) or set OPENAI_API_KEY."
+        "No TTS backend available. Start Kokoro ("
+        "docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:latest"
+        ") or set OPENAI_API_KEY."
     )
 
 
