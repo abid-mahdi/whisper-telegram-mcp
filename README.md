@@ -10,7 +10,7 @@
 [![MCP](https://img.shields.io/badge/MCP-compatible-brightgreen)](https://modelcontextprotocol.io)
 [![Ko-fi](https://img.shields.io/badge/Buy%20me%20a%20coffee-Ko--fi-FF5E5B?logo=ko-fi)](https://ko-fi.com/abidmahdi)
 
-<!-- TODO: Add demo.gif here showing voice in → transcription → voice reply -->
+![Demo: send a voice note, get a voice reply](docs/demo.gif)
 
 An [MCP](https://modelcontextprotocol.io) server that gives Claude two-way voice capabilities via Telegram: transcribe incoming voice messages with Whisper, and reply with synthesized speech. Works with Claude Desktop, Claude Code, and any MCP-compatible client.
 
