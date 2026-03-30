@@ -49,6 +49,16 @@ pip install whisper-telegram-mcp
 whisper-telegram-mcp
 ```
 
+## Telegram Bot Setup
+
+1. Open Telegram and message [@BotFather](https://t.me/BotFather)
+2. Send `/newbot` and follow the prompts to create a bot
+3. Copy the token (looks like `1234567890:ABCdef...`)
+4. Add `TELEGRAM_BOT_TOKEN` to your MCP config env (see below)
+5. Message your bot to start — it'll only respond to approved users
+
+> The Claude Telegram plugin handles access control. See its docs for pairing/allowlist setup.
+
 ## Integration
 
 ### Claude Desktop
@@ -63,7 +73,8 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
       "args": ["whisper-telegram-mcp"],
       "env": {
         "WHISPER_MODEL": "base",
-        "WHISPER_BACKEND": "auto"
+        "WHISPER_BACKEND": "auto",
+        "TELEGRAM_BOT_TOKEN": "your-bot-token-here"
       }
     }
   }
@@ -82,7 +93,8 @@ Add to your project's `.mcp.json`:
       "args": ["whisper-telegram-mcp"],
       "env": {
         "WHISPER_MODEL": "base",
-        "WHISPER_BACKEND": "auto"
+        "WHISPER_BACKEND": "auto",
+        "TELEGRAM_BOT_TOKEN": "your-bot-token-here"
       }
     }
   }
