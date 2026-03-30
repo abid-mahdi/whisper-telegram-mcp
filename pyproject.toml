@@ -5,11 +5,12 @@ build-backend = "hatchling.build"
 [project]
 name = "whisper-telegram-mcp"
 version = "0.1.0"
-description = "MCP server for transcribing Telegram voice messages using Whisper"
+description = "MCP server for transcribing Telegram voice messages using Whisper, with Kokoro/OpenAI TTS voice replies"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-keywords = ["mcp", "whisper", "telegram", "transcription", "voice", "claude"]
+authors = [{ name = "Abid Mahdi", email = "abid@abidmahdi.com" }]
+keywords = ["mcp", "whisper", "telegram", "transcription", "voice", "tts", "claude", "kokoro", "speech-to-text"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -52,6 +53,7 @@ whisper-telegram-mcp = "whisper_telegram_mcp.server:main"
 Homepage = "https://github.com/abid-mahdi/whisper-telegram-mcp"
 Repository = "https://github.com/abid-mahdi/whisper-telegram-mcp"
 Issues = "https://github.com/abid-mahdi/whisper-telegram-mcp/issues"
+Changelog = "https://github.com/abid-mahdi/whisper-telegram-mcp/releases"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/whisper_telegram_mcp"]

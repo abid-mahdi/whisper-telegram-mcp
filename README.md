@@ -6,6 +6,7 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/whisper-telegram-mcp)](https://pypi.org/project/whisper-telegram-mcp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-compatible-brightgreen)](https://modelcontextprotocol.io)
+[![Ko-fi](https://img.shields.io/badge/Buy%20me%20a%20coffee-Ko--fi-FF5E5B?logo=ko-fi)](https://ko-fi.com/abidmahdi)
 
 An [MCP](https://modelcontextprotocol.io) server that gives Claude two-way voice capabilities via Telegram: transcribe incoming voice messages with Whisper, and reply with synthesized speech. Works with Claude Desktop, Claude Code, and any MCP-compatible client.
 

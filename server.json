@@ -9,6 +9,7 @@
   "tools": [
     {"name": "transcribe_audio", "description": "Transcribe a local audio file (OGG, WAV, MP3, etc.) using Whisper"},
     {"name": "transcribe_telegram_voice", "description": "Download and transcribe a Telegram voice message by file_id"},
+    {"name": "speak_text", "description": "Synthesise speech from text and save as OGG voice note (Kokoro → OpenAI TTS → macOS say)"},
     {"name": "list_models", "description": "List available Whisper model sizes and characteristics"},
     {"name": "check_backends", "description": "Check which transcription backends (local/OpenAI) are available"}
   ],

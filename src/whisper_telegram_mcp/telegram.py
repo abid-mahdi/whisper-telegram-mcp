@@ -17,10 +17,10 @@ class TelegramDownloadError(Exception):
 async def get_file_path(bot_token: str, file_id: str) -> str:
     """Resolve a Telegram file_id to a downloadable file_path."""
     url = f"{TELEGRAM_API}/bot{bot_token}/getFile"
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=10.0) as client:
         response = await client.get(url, params={"file_id": file_id})
     if response.status_code != 200:
-        raise TelegramDownloadError(f"HTTP {response.status_code} from Telegram API: {response.text}")
+        raise TelegramDownloadError(f"HTTP {response.status_code} from Telegram API")
     data = response.json()
     if not data.get("ok"):
         raise TelegramDownloadError(f"Telegram API error: {data.get('description', 'Unknown error')}")
@@ -40,7 +40,7 @@ async def download_voice_message(
     file_path = await get_file_path(bot_token, file_id)
     download_url = f"{TELEGRAM_API}/file/bot{bot_token}/{file_path}"
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.get(download_url)
 
     if response.status_code != 200:

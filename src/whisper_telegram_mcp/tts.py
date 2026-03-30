@@ -84,7 +84,7 @@ async def _macos_tts(text: str, voice: str, output_path: str) -> None:
         await asyncio.to_thread(
             subprocess.run,
             ["say", "-v", voice, "-o", aiff_path, text],
-            check=True, capture_output=True,
+            check=True, capture_output=True, timeout=30,
         )
 
         def _encode():
