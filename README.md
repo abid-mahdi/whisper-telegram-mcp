@@ -3,10 +3,9 @@
 > Transcribe and speak — two-way voice for Claude via Telegram
 
 [![CI](https://github.com/abid-mahdi/whisper-telegram-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/abid-mahdi/whisper-telegram-mcp/actions)
-[![Python Version](https://img.shields.io/pypi/pyversions/whisper-telegram-mcp)](https://pypi.org/project/whisper-telegram-mcp/)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-compatible-brightgreen)](https://modelcontextprotocol.io)
-[![PyPI](https://img.shields.io/pypi/v/whisper-telegram-mcp?logo=pypi)](https://pypi.org/project/whisper-telegram-mcp/)
 [![Ko-fi](https://img.shields.io/badge/Buy%20me%20a%20coffee-Ko--fi-FF5E5B?logo=ko-fi)](https://ko-fi.com/abidmahdi)
 
 <!-- TODO: Add demo.gif here showing voice in → transcription → voice reply -->
