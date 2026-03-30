@@ -3,6 +3,8 @@
 > Transcribe and speak — two-way voice for Claude via Telegram
 
 [![CI](https://github.com/abid-mahdi/whisper-telegram-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/abid-mahdi/whisper-telegram-mcp/actions)
+[![PyPI](https://img.shields.io/pypi/v/whisper-telegram-mcp)](https://pypi.org/project/whisper-telegram-mcp/)
+[![Downloads](https://img.shields.io/pypi/dm/whisper-telegram-mcp)](https://pypi.org/project/whisper-telegram-mcp/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-compatible-brightgreen)](https://modelcontextprotocol.io)
@@ -47,7 +49,7 @@ No installation needed -- `uvx` handles everything.
 ### Or install with pip
 
 ```bash
-pip install whisper-telegram-mcp
+pip install "whisper-telegram-mcp[all]"
 whisper-telegram-mcp
 ```
 
