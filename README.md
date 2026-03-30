@@ -19,6 +19,18 @@ An [MCP](https://modelcontextprotocol.io) server that gives Claude two-way voice
 - **Language detection** -- automatic or specify an ISO-639-1 code
 - **Word-level timestamps** -- optional fine-grained timing
 
+## Prerequisites
+
+| Feature | Requirement |
+|---------|-------------|
+| Transcription (local) | None — faster-whisper bundled via `[local]` extras |
+| Transcription (cloud) | `OPENAI_API_KEY` env var |
+| Voice replies — Kokoro (best quality) | **Docker** — run `docker run -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-cpu:latest` |
+| Voice replies — OpenAI TTS (fallback) | `OPENAI_API_KEY` env var |
+| Voice replies — macOS say (last resort) | Mac only, no setup |
+
+> **Kokoro requires Docker.** If Docker isn't running, voice replies fall back to OpenAI TTS or macOS `say` automatically.
+
 ## Quick Start
 
 ### One command with `uvx`
