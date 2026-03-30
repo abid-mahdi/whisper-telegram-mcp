@@ -1,6 +1,7 @@
 """MCP server exposing Whisper transcription tools."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import sys
@@ -63,7 +64,8 @@ async def transcribe_audio(
     cfg = Config()
     if language:
         cfg.language = language
-    result = auto_transcribe(file_path, cfg, word_timestamps=word_timestamps)
+    # Run synchronous (CPU-bound) transcription in a thread to avoid blocking the event loop
+    result = await asyncio.to_thread(auto_transcribe, file_path, cfg, word_timestamps)
     return result.to_dict()
 
 
@@ -106,7 +108,7 @@ async def transcribe_telegram_voice(
         cfg = Config()
         if language:
             cfg.language = language
-        result = auto_transcribe(local_path, cfg, word_timestamps=word_timestamps)
+        result = await asyncio.to_thread(auto_transcribe, local_path, cfg, word_timestamps)
         return result.to_dict()
     finally:
         try:
@@ -131,6 +133,8 @@ async def list_models() -> dict[str, Any]:
         "small.en":  {"params": "244M",  "speed": "moderate", "accuracy": "better",  "vram": "~2GB",  "note": "English only"},
         "medium":    {"params": "769M",  "speed": "slow",     "accuracy": "high",    "vram": "~5GB"},
         "medium.en": {"params": "769M",  "speed": "slow",     "accuracy": "high",    "vram": "~5GB",  "note": "English only"},
+        "large-v1":  {"params": "1550M", "speed": "slowest",  "accuracy": "highest", "vram": "~10GB"},
+        "large-v2":  {"params": "1550M", "speed": "slowest",  "accuracy": "highest", "vram": "~10GB"},
         "large-v3":  {"params": "1550M", "speed": "slowest",  "accuracy": "highest", "vram": "~10GB"},
         "turbo":     {"params": "~800M", "speed": "fast",     "accuracy": "high",    "vram": "~6GB",  "note": "Recommended for accuracy+speed"},
     }
