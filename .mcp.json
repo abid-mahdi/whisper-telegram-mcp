@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "whisper-telegram-mcp": {
+      "command": "uvx",
+      "args": ["whisper-telegram-mcp"],
+      "env": {
+        "WHISPER_MODEL": "base",
+        "WHISPER_BACKEND": "auto"
+      }
+    }
+  }
+}

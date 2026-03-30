@@ -1,0 +1,19 @@
+{
+  "name": "whisper-telegram-mcp",
+  "description": "Transcribe Telegram voice messages using Whisper -- supports local (faster-whisper) and OpenAI API backends",
+  "version": "0.1.0",
+  "author": "Abid Mahdi",
+  "license": "MIT",
+  "homepage": "https://github.com/abid-mahdi/whisper-telegram-mcp",
+  "repository": "https://github.com/abid-mahdi/whisper-telegram-mcp",
+  "tools": [
+    {"name": "transcribe_audio", "description": "Transcribe a local audio file (OGG, WAV, MP3, etc.) using Whisper"},
+    {"name": "transcribe_telegram_voice", "description": "Download and transcribe a Telegram voice message by file_id"},
+    {"name": "list_models", "description": "List available Whisper model sizes and characteristics"},
+    {"name": "check_backends", "description": "Check which transcription backends (local/OpenAI) are available"}
+  ],
+  "installation": {
+    "pip": "pip install whisper-telegram-mcp",
+    "uvx": "uvx whisper-telegram-mcp"
+  }
+}
