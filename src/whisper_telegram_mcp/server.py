@@ -4,7 +4,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import subprocess
 import sys
+import tempfile
 from typing import Any, Optional
 
 # CRITICAL: All logging to stderr — stdout is reserved for MCP protocol (stdio transport)
@@ -176,6 +178,73 @@ async def check_backends() -> dict[str, Any]:
             "configure_via": "TELEGRAM_BOT_TOKEN env var",
         },
     }
+
+
+@mcp.tool()
+async def speak_text(
+    text: str,
+    voice: str = "Samantha",
+    output_path: Optional[str] = None,
+) -> dict[str, Any]:
+    """Convert text to speech using macOS built-in TTS and return an audio file path.
+
+    The returned file path can be sent as a voice reply via Telegram or played locally.
+    Uses macOS `say` + `afconvert` — no API key required.
+
+    Args:
+        text: The text to convert to speech.
+        voice: macOS voice name (default: "Samantha"). Run `say -v ?` to list all voices.
+        output_path: Optional absolute path for the output .m4a file.
+                     Defaults to a temp file.
+
+    Returns:
+        dict with: file_path (absolute path to .m4a audio file), duration_hint, success, error
+    """
+    if not text.strip():
+        return {"success": False, "error": "text is empty", "file_path": None}
+
+    try:
+        # Generate AIFF via macOS say
+        aiff_fd, aiff_path = tempfile.mkstemp(suffix=".aiff")
+        os.close(aiff_fd)
+
+        if output_path is None:
+            m4a_fd, m4a_path = tempfile.mkstemp(suffix=".m4a")
+            os.close(m4a_fd)
+        else:
+            m4a_path = output_path
+
+        def _generate() -> None:
+            subprocess.run(
+                ["say", "-v", voice, "-o", aiff_path, text],
+                check=True, capture_output=True,
+            )
+            subprocess.run(
+                ["afconvert", aiff_path, m4a_path, "-f", "m4af", "-d", "aac"],
+                check=True, capture_output=True,
+            )
+
+        await asyncio.to_thread(_generate)
+
+        size = os.path.getsize(m4a_path)
+        return {
+            "success": True,
+            "file_path": m4a_path,
+            "size_bytes": size,
+            "voice": voice,
+            "error": None,
+        }
+    except subprocess.CalledProcessError as exc:
+        logger.exception("TTS generation failed")
+        return {"success": False, "error": f"TTS failed: {exc.stderr.decode() if exc.stderr else str(exc)}", "file_path": None}
+    except Exception as exc:
+        logger.exception("speak_text failed")
+        return {"success": False, "error": str(exc), "file_path": None}
+    finally:
+        try:
+            os.unlink(aiff_path)
+        except OSError:
+            pass
 
 
 def main() -> None:

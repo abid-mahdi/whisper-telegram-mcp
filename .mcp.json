@@ -2,7 +2,7 @@
   "mcpServers": {
     "whisper-telegram-mcp": {
       "command": "uvx",
-      "args": ["whisper-telegram-mcp[all]"],
+      "args": ["--from", "git+https://github.com/abid-mahdi/whisper-telegram-mcp.git", "whisper-telegram-mcp[all]"],
       "env": {
         "WHISPER_MODEL": "base",
         "WHISPER_BACKEND": "auto"
