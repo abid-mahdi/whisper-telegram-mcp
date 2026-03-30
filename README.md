@@ -38,6 +38,28 @@ An [MCP](https://modelcontextprotocol.io) server that gives Claude two-way voice
 
 ## Quick Start
 
+### Set up in 30 seconds with Claude Code
+
+The fastest way to get started — just tell Claude Code to set it up for you:
+
+1. Add to your `.mcp.json` (Claude Code) or `claude_desktop_config.json` (Claude Desktop):
+
+```json
+{
+  "mcpServers": {
+    "whisper-telegram-mcp": {
+      "command": "uvx",
+      "args": ["whisper-telegram-mcp"],
+      "env": {
+        "TELEGRAM_BOT_TOKEN": "your-bot-token-here"
+      }
+    }
+  }
+}
+```
+
+2. Restart Claude and say: *"Set up my Telegram bot for voice transcription"* — Claude will walk you through creating the bot with BotFather and configuring everything.
+
 ### One command with `uvx`
 
 ```bash
