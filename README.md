@@ -1,19 +1,20 @@
 # whisper-telegram-mcp
 
-> Transcribe Telegram voice messages with Whisper -- as an MCP tool for Claude
+> Transcribe and speak — two-way voice for Claude via Telegram
 
 [![CI](https://github.com/abid-mahdi/whisper-telegram-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/abid-mahdi/whisper-telegram-mcp/actions)
 [![Python Version](https://img.shields.io/pypi/pyversions/whisper-telegram-mcp)](https://pypi.org/project/whisper-telegram-mcp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-compatible-brightgreen)](https://modelcontextprotocol.io)
 
-An [MCP](https://modelcontextprotocol.io) server that transcribes audio files and Telegram voice messages using OpenAI's Whisper speech recognition. Works with Claude Desktop, Claude Code, and any MCP-compatible client.
+An [MCP](https://modelcontextprotocol.io) server that gives Claude two-way voice capabilities via Telegram: transcribe incoming voice messages with Whisper, and reply with synthesized speech. Works with Claude Desktop, Claude Code, and any MCP-compatible client.
 
 ## What It Does
 
 - **Transcribe local audio files** -- OGG, WAV, MP3, FLAC, and more
 - **Transcribe Telegram voice messages** -- pass a `file_id`, get text back
-- **Two backends** -- local inference with [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (free, private) or OpenAI Whisper API (cloud)
+- **Speak text as voice notes** -- synthesise speech and send back as OGG (plays as a voice note in Telegram)
+- **Two transcription backends** -- local [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (free, private) or OpenAI Whisper API (cloud)
 - **Auto mode** -- tries local first, falls back to OpenAI if it fails
 - **Language detection** -- automatic or specify an ISO-639-1 code
 - **Word-level timestamps** -- optional fine-grained timing
@@ -81,6 +82,7 @@ Add to your project's `.mcp.json`:
 |------|-------------|
 | `transcribe_audio` | Transcribe a local audio file (OGG, WAV, MP3, etc.) to text |
 | `transcribe_telegram_voice` | Download and transcribe a Telegram voice message by `file_id` |
+| `speak_text` | Convert text to speech → OGG/Opus file (plays as voice note in Telegram) |
 | `list_models` | List available Whisper model sizes with speed/accuracy info |
 | `check_backends` | Check which backends (local/OpenAI) are available and configured |
 
@@ -101,7 +103,43 @@ language: str | None  # ISO-639-1 code, None = auto-detect
 word_timestamps: bool # Include word-level timestamps (default: false)
 ```
 
-### Response Format
+### `speak_text`
+
+Converts text to an OGG/Opus audio file using macOS built-in TTS. No API key required — completely free. Uses PyAV (bundled with faster-whisper) for encoding, so no system-level ffmpeg needed.
+
+```
+text: str             # Text to synthesise
+voice: str            # macOS voice name (default: "Samantha")
+output_path: str|None # Optional path for output .ogg file
+```
+
+**Available English voices:**
+
+| Voice | Accent | Style |
+|-------|--------|-------|
+| `Samantha` | US | Natural female (default) |
+| `Flo (English (US))` | US | Natural female |
+| `Daniel` | British | Natural male |
+| `Karen` | Australian | Natural female |
+| `Moira` | Irish | Natural female |
+| `Fred` | US | Classic male |
+
+Run `say -v "?"` in your terminal to see all voices available on your system.
+
+**Returns:**
+```json
+{
+  "file_path": "/tmp/tmpXXX.ogg",
+  "size_bytes": 16555,
+  "voice": "Samantha",
+  "success": true,
+  "error": null
+}
+```
+
+Send the returned `file_path` as a Telegram attachment and it will appear as a native voice note.
+
+### Transcription response format
 
 All transcription tools return:
 
@@ -140,18 +178,18 @@ All configuration is via environment variables:
                          [MCP stdio]
                               |
                     whisper-telegram-mcp
-                         /         \
-                        /           \
-              transcribe_audio   transcribe_telegram_voice
-                      |                    |
-                      |            [Download via Bot API]
-                      |                    |
-                      +--------+-----------+
-                               |
-                         auto_transcribe()
-                          /           \
-                   LocalBackend    OpenAIBackend
-                   (faster-whisper)  (Whisper API)
+                    /         |         \
+                   /          |          \
+      transcribe_audio  transcribe_     speak_text
+                        telegram_voice      |
+              |               |        [macOS say]
+              |         [Bot API DL]        |
+              +--------+------+        [PyAV encode]
+                       |                    |
+                 auto_transcribe()        .ogg file
+                  /           \
+           LocalBackend    OpenAIBackend
+           (faster-whisper)  (Whisper API)
 ```
 
 1. Claude sends a tool call via MCP (stdio transport)
