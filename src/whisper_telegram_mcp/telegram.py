@@ -8,6 +8,7 @@ from typing import Optional
 import httpx
 
 TELEGRAM_API = "https://api.telegram.org"
+MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB — Telegram voice message limit
 
 
 class TelegramDownloadError(Exception):
@@ -45,6 +46,11 @@ async def download_voice_message(
 
     if response.status_code != 200:
         raise TelegramDownloadError(f"Failed to download file: HTTP {response.status_code}")
+
+    if len(response.content) > MAX_FILE_SIZE_BYTES:
+        raise TelegramDownloadError(
+            f"File too large ({len(response.content) / 1024 / 1024:.1f}MB). Max {MAX_FILE_SIZE_BYTES // 1024 // 1024}MB."
+        )
 
     ext = os.path.splitext(file_path)[1] or ".oga"
     save_dir = output_dir or tempfile.gettempdir()

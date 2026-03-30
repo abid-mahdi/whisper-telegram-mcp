@@ -20,7 +20,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - uses: astral-sh/setup-uv@v3
-      - run: uv pip install --system -e ".[dev]"
+      - run: uv pip install --system -e ".[dev]" ruff
+      - name: Lint
+        run: ruff check src/ tests/ --exit-zero
+        continue-on-error: true
       - run: pytest tests/ -v -m "not integration" --cov=src/whisper_telegram_mcp --cov-report=xml
       - uses: codecov/codecov-action@v4
         if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'

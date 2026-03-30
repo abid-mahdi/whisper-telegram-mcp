@@ -6,7 +6,10 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/whisper-telegram-mcp)](https://pypi.org/project/whisper-telegram-mcp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-compatible-brightgreen)](https://modelcontextprotocol.io)
+[![PyPI](https://img.shields.io/pypi/v/whisper-telegram-mcp?logo=pypi)](https://pypi.org/project/whisper-telegram-mcp/)
 [![Ko-fi](https://img.shields.io/badge/Buy%20me%20a%20coffee-Ko--fi-FF5E5B?logo=ko-fi)](https://ko-fi.com/abidmahdi)
+
+<!-- TODO: Add demo.gif here showing voice in → transcription → voice reply -->
 
 An [MCP](https://modelcontextprotocol.io) server that gives Claude two-way voice capabilities via Telegram: transcribe incoming voice messages with Whisper, and reply with synthesized speech. Works with Claude Desktop, Claude Code, and any MCP-compatible client.
 
@@ -292,6 +295,13 @@ All configuration is via environment variables:
 | `turbo` | ~800M | Fast | High | ~6GB |
 
 English-only variants (`tiny.en`, `base.en`, `small.en`, `medium.en`) are slightly more accurate for English.
+
+## Privacy & Data
+
+- **Local backend (faster-whisper)**: Audio stays on your device. Nothing leaves your machine.
+- **OpenAI backend**: Audio sent to OpenAI API per their [data retention policy](https://platform.openai.com/docs/guides/privacy)
+- **Temporary files**: Audio downloaded from Telegram is written to `/tmp` and deleted immediately after transcription
+- **Logs**: Go to stderr only — no audio content or credentials are ever logged
 
 ## Development
 

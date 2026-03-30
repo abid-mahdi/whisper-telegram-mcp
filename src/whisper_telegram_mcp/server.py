@@ -93,7 +93,8 @@ async def transcribe_telegram_voice(
     if not token:
         return _error_dict(
             "none",
-            "No bot token provided. Pass bot_token argument or set TELEGRAM_BOT_TOKEN env var."
+            "No bot token provided. Pass bot_token argument or set TELEGRAM_BOT_TOKEN env var. "
+        "Setup guide: https://github.com/abid-mahdi/whisper-telegram-mcp#telegram-bot-setup"
         )
 
     try:
